@@ -32,7 +32,7 @@ public class Prefix extends CCSExpression {
     }
 
     @Override
-    public String deparse(int level) {
+    protected String deparse(int level) {
         return wrap(level, 0, prefix.toString() + "." + then.deparse(0));
     }
 

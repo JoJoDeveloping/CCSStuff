@@ -33,7 +33,7 @@ public class Restrict extends CCSExpression {
     }
 
     @Override
-    public String deparse(int level) {
+    protected String deparse(int level) {
         return wrap(level, 1, expr.deparse(0) + " \\ " + filter.toString());
     }
 

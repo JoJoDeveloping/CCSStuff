@@ -14,7 +14,7 @@ public abstract class CCSExpression {
     @Override
     public abstract int hashCode();
 
-    public abstract String deparse(int level);
+    protected abstract String deparse(int level);
 
     @Override
     public final String toString() {
@@ -28,8 +28,16 @@ public abstract class CCSExpression {
         return s;
     }
 
+    /**
+     * Finds all variables used in this expression
+     */
     public abstract Set<String> usedVariables();
 
+    /**
+     * Derives all action-sucessor-pairs for this expression, given an environment that derives these pairs for variables
+     * @param env the environment
+     * @return all derivable pairs
+     */
     public abstract Set<Pair<Action, CCSExpression>> deriveTransitions(Function<String, Set<Pair<Action, CCSExpression>>> env);
 
 }

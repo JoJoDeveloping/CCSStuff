@@ -10,6 +10,9 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * A context, which maps variables to CCS expressions.
+ */
 public class Binding {
 
     private final Function<String, Optional<CCSExpression>> base;
@@ -31,6 +34,11 @@ public class Binding {
         this.domain = data.stream().map(Pair::first).collect(Collectors.toList());
     }
 
+    /**
+     * Finds the expression mapped to a variable, if it exists
+     * @param var the variable to look up
+     * @return the expression mapped to it, if it exists
+     */
     public Optional<CCSExpression> lookup(String var) {
         if (domain != null && !domain.contains(var))
             return Optional.empty();
@@ -65,6 +73,10 @@ public class Binding {
         return domain.hashCode() ^ Arrays.hashCode(domain.stream().map(k -> new Pair<>(k, base.apply(k))).toArray());
     }
 
+    /**
+     * Converts this binding into one that can be copy-pasted into pseuco.com
+     * @return the string representation
+     */
     public String toPseuco() {
         return domain.stream().map(k -> base.apply(k).map(v -> k + " := " + v)).flatMap(Optional::stream).collect(Collectors.joining("\n"));
     }

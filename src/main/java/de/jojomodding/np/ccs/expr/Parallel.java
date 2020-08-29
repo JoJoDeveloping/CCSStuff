@@ -34,7 +34,7 @@ public class Parallel extends CCSExpression {
     }
 
     @Override
-    public String deparse(int level) {
+    protected String deparse(int level) {
         return wrap(level, 3, left.deparse(3) + " | " + right.deparse(2));
     }
 

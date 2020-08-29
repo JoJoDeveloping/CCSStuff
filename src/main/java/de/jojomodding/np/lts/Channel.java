@@ -2,6 +2,9 @@ package de.jojomodding.np.lts;
 
 import java.util.Objects;
 
+/**
+ * A channel. At the moment, basically a string.
+ */
 public final class Channel {
 
     private final String name;

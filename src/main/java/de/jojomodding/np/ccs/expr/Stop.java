@@ -24,7 +24,7 @@ public class Stop extends CCSExpression {
     }
 
     @Override
-    public String deparse(int level) {
+    protected String deparse(int level) {
         return "0";
     }
 

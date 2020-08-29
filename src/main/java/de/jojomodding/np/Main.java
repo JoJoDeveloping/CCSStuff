@@ -16,6 +16,7 @@ import static de.jojomodding.np.Factory.*;
 public class Main {
 
     public static void main(String[] args) {
+        //Simple example where we construct the LTS expression by hand
         CCSExpression example = choice(sending("a").then(stop()), parallel("X", restrict(tau().then(stop()), excluding("cc"))));
         System.out.println(example);
         CCSTransitionDerivation cd = new CCSTransitionDerivation(new Binding(Map.of(
@@ -32,8 +33,10 @@ public class Main {
         System.out.println(Minimization.minimizeObservationCongruence(lts));
         System.out.println(lts.randomWalk(true));
         System.out.println();
+        System.out.println();
 
 
+        //More involved example utilising the parser
         String raw = "Match := strike?. MatchOnFire\n"
                      + "MatchOnFire := light!. MatchOnFire + extinguish!.0\n"
                      + "TwoFireCracker := light?. (bang!. 0 | bang!. 0)\n"
@@ -48,21 +51,11 @@ public class Main {
         System.out.println(min);
         System.out.println(min.toPseuco());
         System.out.println(mlts.randomWalk(false));
+        System.out.println();
+        System.out.println();
 
-        System.out.println();
-        System.out.println();
+        //Huge example to show speed. This LTS has 706 states, and minimizes to 4 states
         Pair<Binding, CCSExpression> kk = Parser.parse(
-                "Scientist := getmail? . MailWritingScientist + zoom? . (Scientist + meet! . Scientist)\n"
-                + "MailWritingScientist := moan! . MailWritingScientist + sendmail! . Scientist + zoom? . (MailWritingScientist + meet! . MailWritingScientist)\n"
-                + "Scientists := Scientist | Scientist | Scientist\n"
-                + "Server := getmail! . Server + sendmail? . Server + i . reboot? . Server\n"
-                + "Administrator := music? . Administrator + reboot! . Administrator\n"
-                + "Professor := read! . Professor + zoom! . zoom! . zoom! . \n"
-                + "            (scream! . Professor + meet? . \n"
-                + "                    (scream! . Professor + meet? .\n"
-                + "                            (scream! . Professor + meet? . workharder! . Professor)))\n"
-                + "(Scientists | Server | Administrator | Professor) \\ {reboot, getmail, sendmail, zoom, meet}");
-        System.out.println(
                 "Scientist := getmail? . MailWritingScientist + zoom? . (Scientist + meet! . Scientist)\n"
                 + "MailWritingScientist := moan! . MailWritingScientist + sendmail! . Scientist + zoom? . (MailWritingScientist + meet! . MailWritingScientist)\n"
                 + "Scientists := Scientist | Scientist | Scientist\n"
@@ -76,7 +69,6 @@ public class Main {
         System.out.println(kk);
         CCSTransitionDerivation cr = new CCSTransitionDerivation(kk.first());
         LTS<CCSExpression> scientistLTS = cr.getReachableLTS(kk.second());
-        System.out.println(scientistLTS.toPseuco());
         LTS<Set<CCSExpression>> miniScientist = Minimization.minimizeObservationCongruence(scientistLTS);
         System.out.println(miniScientist.rename());
         System.out.println(miniScientist.toPseuco());

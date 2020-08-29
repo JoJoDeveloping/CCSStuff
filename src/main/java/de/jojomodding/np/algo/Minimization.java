@@ -12,12 +12,20 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+/**
+ * Performs LTS minimisation
+ */
 public class Minimization {
 
     private static <T> BiFunction<Set<T>, Action, Set<T>> predecessors(Set<LTS.Transitions<T>> trans) {
         return (of, a) -> trans.stream().filter(t -> t.getAction().equals(a)).filter(t -> of.contains(t.getTarget())).map(LTS.Transitions::getSource).collect(Collectors.toSet());
     }
 
+    /**
+     * Finds the minimal LTS bisimilar to the given LTS
+     * @param base the LTS to minimize
+     * @return the smallest LTS bisimilar to base
+     */
     public static <T> LTS<Set<T>> minimizeBisimilarity(LTS<T> base) {
         return minimizeStates(base, predecessors(base.getTransitions()));
     }
@@ -103,6 +111,11 @@ public class Minimization {
         }
     }
 
+    /**
+     * Finds the minimal LTS weakly bisimilar to the given LTS
+     * @param base the LTS to minimize
+     * @return the smallest LTS weakly bisimilar to base
+     */
     public static <T> LTS<Set<T>> minimizeWeakBisimilarity(LTS<T> base) {
         LTS<Set<T>> minStates = minimizeStates(base, weakPredecessors(base));
         HashSet<LTS.Transitions<Set<T>>> trans = new HashSet<>(minStates.getTransitions());
@@ -114,6 +127,11 @@ public class Minimization {
         return new LTS<>(minStates.getStates(), trans, minStates.getStart());
     }
 
+    /**
+     * Finds the minimal LTS observation congruent to the given LTS
+     * @param base the LTS to minimize
+     * @return the smallest LTS observation congruent to base
+     */
     public static <T> LTS<Set<T>> minimizeObservationCongruence(LTS<T> base) {
         LTS<Set<T>> wbMin = minimizeWeakBisimilarity(base);
         if (base.getTransitions().stream().filter(t -> t.getSource().equals(base.getStart()) && t.getAction().isInternal())

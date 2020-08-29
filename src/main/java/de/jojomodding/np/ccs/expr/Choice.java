@@ -32,7 +32,7 @@ public class Choice extends CCSExpression {
     }
 
     @Override
-    public String deparse(int level) {
+    protected String deparse(int level) {
         return wrap(level, 2, left.deparse(2) + " + " + right.deparse(1));
     }
 

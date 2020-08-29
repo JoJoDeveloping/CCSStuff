@@ -6,7 +6,9 @@ import de.jojomodding.np.ccs.expr.CCSExpression;
 import java.util.Objects;
 import java.util.Optional;
 
-
+/**
+ * Represents an action in the LTS
+ */
 public abstract class Action {
 
     public static InternalAction tau() {
@@ -52,10 +54,16 @@ public abstract class Action {
     @Override
     public abstract int hashCode();
 
+    /**
+     * Constructs the expression 'this'.then
+     */
     public CCSExpression then(CCSExpression then) {
         return Factory.prefix(this, then);
     }
 
+    /**
+     * Constructs the expression 'this'.then
+     */
     public CCSExpression then(String var) {
         return Factory.prefix(this, var);
     }

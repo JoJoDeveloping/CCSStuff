@@ -17,6 +17,10 @@ import java.util.stream.Stream;
 
 import static de.jojomodding.np.Factory.var;
 
+/**
+ * A (finite) LTS
+ * @param <T> the type of the states. Should have proper equality and toString()
+ */
 public class LTS<T> {
     private final List<T> states;
     private final T start;
@@ -47,6 +51,9 @@ public class LTS<T> {
         return transitions;
     }
 
+    /**
+     * Computes the formal representation of an LTS as a tuple of states, transitions and start state.
+     */
     @Override
     public String toString() {
         return "(" + states.stream().map(Objects::toString).collect(Collectors.joining(", ", "{", "}")) + ", "
@@ -68,6 +75,9 @@ public class LTS<T> {
         return new LTS<>(ns, transitions.stream().map(p -> new Transitions<>(m.get(p.getSource()), p.getAction(), m.get(p.getTarget()))).collect(Collectors.toUnmodifiableSet()), m.get(start));
     }
 
+    /**
+     * Returns a pair consisting of a binding and a CCS expression, which in that binding generates an LTS isomorphic to this
+     */
     public Pair<Binding, CCSExpression> toCCS() {
         LTS<Integer> k = rename();
         Binding b = new Binding(k.getStates().stream()
@@ -78,11 +88,19 @@ public class LTS<T> {
         return new Pair<>(b, var("X" + k.getStart()));
     }
 
+    /**
+     * Returns a string that can be copy-pasted into pseuco.com and then generate an LTS isomorphic to this.
+     */
     public String toPseuco() {
         Pair<Binding, CCSExpression> k = toCCS();
         return k.first().toPseuco() + "\n\n" + k.second().toString();
     }
 
+    /**
+     * Performs a random walk through this LTS
+     * @param canTerminateEarly whether we can terminate before reaching a terminal state
+     * @return a string representation of the walk
+     */
     public String randomWalk(boolean canTerminateEarly) {
         T t = start;
         String walk = t.toString();
