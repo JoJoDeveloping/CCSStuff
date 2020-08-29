@@ -1,9 +1,9 @@
 package de.jojomodding.np.algo;
 
-import de.jojomodding.np.lts.Action;
 import de.jojomodding.np.ccs.expr.Binding;
 import de.jojomodding.np.ccs.expr.CCSExpression;
 import de.jojomodding.np.ccs.expr.Variable;
+import de.jojomodding.np.lts.Action;
 import de.jojomodding.np.lts.LTS;
 import de.jojomodding.np.util.Pair;
 
@@ -60,7 +60,7 @@ public class CCSTransitionDerivation {
             }
         } while (!partialDerivations.equals(oldPDs));
         partialDerivations.forEach(derivations::put);
-        partialDerivations.forEach((k,v) -> cachedDerivations.put(new Variable(k), v));
+        partialDerivations.forEach((k, v) -> cachedDerivations.put(new Variable(k), v));
         cachedDerivations.put(base, base.deriveTransitions(e -> derivations.getOrDefault(e, Set.of())));
     }
 
@@ -71,7 +71,7 @@ public class CCSTransitionDerivation {
             oldReachableFragment = new HashSet<>(reachableFragment);
             oldReachableFragment.stream().flatMap(p -> derive(p).stream().map(Pair::second)).forEach(reachableFragment::add);
         } while (reachableFragment.size() != oldReachableFragment.size());
-        return reachableFragment.stream().flatMap(p -> derive(p).stream().map(v -> new Pair<>(p,v))).collect(Collectors.toSet());
+        return reachableFragment.stream().flatMap(p -> derive(p).stream().map(v -> new Pair<>(p, v))).collect(Collectors.toSet());
     }
 
     public LTS<CCSExpression> getReachableLTS(CCSExpression base) {

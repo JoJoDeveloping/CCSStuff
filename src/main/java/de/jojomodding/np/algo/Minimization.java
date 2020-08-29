@@ -3,16 +3,14 @@ package de.jojomodding.np.algo;
 import de.jojomodding.np.lts.Action;
 import de.jojomodding.np.lts.LTS;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Minimization {
 
@@ -25,81 +23,64 @@ public class Minimization {
     }
 
     private static <T> LTS<Set<T>> minimizeStates(LTS<T> base, BiFunction<Set<T>, Action, Set<T>> preds) {
-        Set<Set<T>> equivalenceClasses = new HashSet<>(), oldEquivalenceClasses;
-        equivalenceClasses.add(base.getStates());
+        Set<Set<T>> equivalenceClasses = new HashSet<>();
+        equivalenceClasses.add(new HashSet<>(base.getStates()));
         Set<Action> allActions = base.getTransitions().stream().map(LTS.Transitions::getAction).collect(Collectors.toUnmodifiableSet());
-        AtomicBoolean didSplit = new AtomicBoolean(false);
+        outer:
         do {
-            oldEquivalenceClasses = new HashSet<>(equivalenceClasses);
-            didSplit.set(false);
-            for (Set<T> eq : oldEquivalenceClasses) {
-                for (Action a : allActions) {
+            for (Action a : allActions) {
+                for (Set<T> eq : equivalenceClasses) {
                     Set<T> pre = preds.apply(eq, a);
-                    equivalenceClasses = equivalenceClasses.stream().flatMap(p -> {
-                        Set<T> t1 = new HashSet<>(p), t2 = new HashSet<>(p);
-                        t1.removeIf(pre::contains);
+                    for (Set<T> eq2 : equivalenceClasses) {
+                        Set<T> t2 = new HashSet<>(eq2);
                         t2.removeIf(Predicate.not(pre::contains));
-                        if (t1.size() == 0)
-                            return Stream.of(t2);
-                        if (t2.size() == 0)
-                            return Stream.of(t1);
-                        didSplit.set(true);
-                        return Stream.of(t1, t2);
-                    }).collect(Collectors.toUnmodifiableSet());
+                        if (t2.size() == 0 || t2.size() == eq2.size())
+                            continue;
+                        eq2.removeIf(pre::contains);
+                        equivalenceClasses.add(t2);
+                        continue outer;
+                    }
                 }
             }
-        } while (didSplit.get());
+            break;
+        } while (true);
         Map<T, Set<T>> eqMap = new HashMap<>();
         equivalenceClasses.forEach(s -> s.forEach(t -> eqMap.put(t, s)));
         Set<LTS.Transitions<Set<T>>> newTrans = base.getTransitions().stream().map(p -> new LTS.Transitions<>(eqMap.get(p.getSource()), p.getAction(), eqMap.get(p.getTarget()))).collect(Collectors.toUnmodifiableSet());
-        return new LTS<>(equivalenceClasses, newTrans, eqMap.get(base.getStart()));
+        return new LTS<>(new ArrayList<>(equivalenceClasses), newTrans, eqMap.get(base.getStart()));
     }
 
-//    private static <T> Set<LTS.Transitions<T>> weakTransClosure(Set<LTS.Transitions<T>> t) {
-//        Set<LTS.Transitions<T>> step = new HashSet<>(t), oldStep;
-//        Map<T, Set<T>> tauAfters = new HashMap<>(), tauBefores = new HashMap<>();
-//        step.stream().filter(tr->tr.getAction().isInternal())
-//            .forEach(tr -> {
-//                tauAfters.computeIfAbsent(tr.getSource(), $ -> new HashSet<>()).add(tr.getTarget());
-//                tauBefores.computeIfAbsent(tr.getTarget(), $ -> new HashSet<>()).add(tr.getSource());
-//            });
-//        do {
-//            oldStep = new HashSet<>(step);
-//            oldStep.forEach(tr -> {
-//                tauAfters.getOrDefault(tr.getTarget(), Set.of()).forEach(tgt ->
-//                        step.add(new LTS.Transitions<>(tr.getSource(), tr.getAction(), tgt)));
-//                tauBefores.getOrDefault(tr.getSource(), Set.of()).forEach(src ->
-//                        step.add(new LTS.Transitions<>(src, tr.getAction(), tr.getTarget())));
-//            });
-//        } while (step.size() != oldStep.size());
-//        return step;
-//    }
 
-    private static <T> BiFunction<Set<T>, Action, Set<T>> weakPredecessors(Set<LTS.Transitions<T>> lts) {
-        Map<T, Set<T>> tauBefores = new HashMap<>(), oldTauBefores;
+    private static <T> BiFunction<Set<T>, Action, Set<T>> weakPredecessors(LTS<T> lts) {
+        Map<T, Set<T>> tauBefores = new HashMap<>();
 
-        lts.stream().filter(tr->tr.getAction().isInternal())
-            .forEach(tr -> {
-                tauBefores.computeIfAbsent(tr.getTarget(), $ -> new HashSet<>()).add(tr.getSource());
-            });
-        lts.forEach(tr -> {
+        lts.getStates().forEach(s -> {
             //make it reflexive
-            tauBefores.computeIfAbsent(tr.getTarget(), $ -> new HashSet<>()).add(tr.getTarget());
-            tauBefores.computeIfAbsent(tr.getSource(), $ -> new HashSet<>()).add(tr.getSource());
+            tauBefores.computeIfAbsent(s, $ -> new HashSet<>()).add(s);
         });
 
-        Set<T> empty = Set.of();
+        lts.getTransitions().stream()
+           .filter(tr -> tr.getAction().isInternal())
+           .forEach(tr -> {
+               tauBefores.get(tr.getTarget()).add(tr.getSource());
+           });
+        int oldSize;
         do {
-            oldTauBefores = new HashMap<>(tauBefores);
-            lts.stream().filter(tr->tr.getAction().isInternal())
-               .forEach(tr -> {
-                   tauBefores.computeIfAbsent(tr.getTarget(), $ -> new HashSet<>()).addAll(tauBefores.getOrDefault(tr.getSource(), empty));
-               });
-        } while (!oldTauBefores.equals(tauBefores));
+            oldSize = tauBefores.values().stream().mapToInt(Set::size).sum();
+            lts.getTransitions().stream()
+               .filter(tr -> tr.getAction().isInternal())
+               .forEach(tr -> tauBefores.get(tr.getTarget()).addAll(tauBefores.get(tr.getSource())));
+        } while (oldSize != tauBefores.values().stream().mapToInt(Set::size).sum());
         return (tgts, a) -> {
-            Set<T> myTauBefores = tgts.stream().flatMap(k -> tauBefores.getOrDefault(k, empty).stream()).collect(Collectors.toUnmodifiableSet());
-            return lts.stream().filter(t -> myTauBefores.contains(t.getTarget()) && t.getAction().equals(a))
-                    .flatMap(k -> tauBefores.getOrDefault(k.getSource(), empty).stream()).collect(Collectors.toUnmodifiableSet());
+            Set<T> myTauBefores = tgts.stream()
+                                      .flatMap(k -> tauBefores.get(k).stream())
+                                      .collect(Collectors.toUnmodifiableSet());
+            if (a.isInternal())
+                return myTauBefores;
+            else
+                return lts.getTransitions().stream().filter(t -> myTauBefores.contains(t.getTarget()) && t.getAction().equals(a))
+                          .flatMap(k -> tauBefores.get(k.getSource()).stream())
+                          .collect(Collectors.toUnmodifiableSet());
         };
     }
 
@@ -108,7 +89,7 @@ public class Minimization {
         starts.add(start);
         do {
             oldstarts = new HashSet<>(starts);
-            t.stream().filter(p -> starts.contains(p.getSource()) && p.getAction().isInternal()).forEach(p->starts.add(p.getTarget()));
+            t.stream().filter(p -> starts.contains(p.getSource()) && p.getAction().isInternal()).forEach(p -> starts.add(p.getTarget()));
         } while (starts.size() != oldstarts.size());
         stops.add(stop);
         do {
@@ -123,16 +104,12 @@ public class Minimization {
     }
 
     public static <T> LTS<Set<T>> minimizeWeakBisimilarity(LTS<T> base) {
-        LTS<Set<T>> minStates = minimizeStates(base, weakPredecessors(base.getTransitions()));
+        LTS<Set<T>> minStates = minimizeStates(base, weakPredecessors(base));
         HashSet<LTS.Transitions<Set<T>>> trans = new HashSet<>(minStates.getTransitions());
-//        int counter = 0;
         for (LTS.Transitions<Set<T>> k : minStates.getTransitions()) {
             trans.remove(k);
             if (!hasWeakTransaction(trans, k.getSource(), k.getAction(), k.getTarget()))
                 trans.add(k);
-//            if(((counter++)%100) == 99) {
-//                System.out.println(counter);
-//            }
         }
         return new LTS<>(minStates.getStates(), trans, minStates.getStart());
     }
@@ -140,14 +117,12 @@ public class Minimization {
     public static <T> LTS<Set<T>> minimizeObservationCongruence(LTS<T> base) {
         LTS<Set<T>> wbMin = minimizeWeakBisimilarity(base);
         if (base.getTransitions().stream().filter(t -> t.getSource().equals(base.getStart()) && t.getAction().isInternal())
-        .anyMatch(t -> wbMin.getStart().contains(t.getTarget()))) {
+                .anyMatch(t -> wbMin.getStart().contains(t.getTarget()))) {
             //wbMin.getTransitions() is a HashSet, and thus modifiable.
             wbMin.getTransitions().add(new LTS.Transitions<>(wbMin.getStart(), Action.tau(), wbMin.getStart()));
         }
         return wbMin;
     }
-
-
 
 
 }

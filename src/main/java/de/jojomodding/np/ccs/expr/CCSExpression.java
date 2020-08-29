@@ -10,8 +10,10 @@ public abstract class CCSExpression {
 
     @Override
     public abstract boolean equals(Object obj);
+
     @Override
     public abstract int hashCode();
+
     public abstract String deparse(int level);
 
     @Override

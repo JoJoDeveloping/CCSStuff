@@ -2,7 +2,7 @@ package de.jojomodding.np.util;
 
 import java.util.Objects;
 
-public class Pair<T,U> {
+public class Pair<T, U> {
 
     private final T t;
     private final U u;

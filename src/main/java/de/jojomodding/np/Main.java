@@ -62,12 +62,25 @@ public class Main {
                 + "                    (scream! . Professor + meet? .\n"
                 + "                            (scream! . Professor + meet? . workharder! . Professor)))\n"
                 + "(Scientists | Server | Administrator | Professor) \\ {reboot, getmail, sendmail, zoom, meet}");
+        System.out.println(
+                "Scientist := getmail? . MailWritingScientist + zoom? . (Scientist + meet! . Scientist)\n"
+                + "MailWritingScientist := moan! . MailWritingScientist + sendmail! . Scientist + zoom? . (MailWritingScientist + meet! . MailWritingScientist)\n"
+                + "Scientists := Scientist | Scientist | Scientist\n"
+                + "Server := getmail! . Server + sendmail? . Server + i . reboot? . Server\n"
+                + "Administrator := music? . Administrator + reboot! . Administrator\n"
+                + "Professor := read! . Professor + zoom! . zoom! . zoom! . \n"
+                + "            (scream! . Professor + meet? . \n"
+                + "                    (scream! . Professor + meet? .\n"
+                + "                            (scream! . Professor + meet? . workharder! . Professor)))\n"
+                + "(Scientists | Server | Administrator | Professor) \\ {reboot, getmail, sendmail, zoom, meet}");
         System.out.println(kk);
         CCSTransitionDerivation cr = new CCSTransitionDerivation(kk.first());
         LTS<CCSExpression> scientistLTS = cr.getReachableLTS(kk.second());
-        System.out.println(scientistLTS.rename());
+        System.out.println(scientistLTS.toPseuco());
         LTS<Set<CCSExpression>> miniScientist = Minimization.minimizeObservationCongruence(scientistLTS);
-        System.out.println(miniScientist);
+        System.out.println(miniScientist.rename());
+        System.out.println(miniScientist.toPseuco());
+
     }
 
 }

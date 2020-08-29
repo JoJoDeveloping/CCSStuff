@@ -1,17 +1,17 @@
 package de.jojomodding.np.ccs.parse;
 
-import de.jojomodding.np.lts.Action;
-import de.jojomodding.np.lts.Channel;
+import de.jojomodding.np.Factory;
 import de.jojomodding.np.ccs.expr.Binding;
 import de.jojomodding.np.ccs.expr.CCSExpression;
 import de.jojomodding.np.ccs.expr.Choice;
-import de.jojomodding.np.Factory;
 import de.jojomodding.np.ccs.expr.FilterSet;
 import de.jojomodding.np.ccs.expr.Parallel;
 import de.jojomodding.np.ccs.expr.Prefix;
 import de.jojomodding.np.ccs.expr.Restrict;
 import de.jojomodding.np.ccs.expr.Stop;
 import de.jojomodding.np.ccs.expr.Variable;
+import de.jojomodding.np.lts.Action;
+import de.jojomodding.np.lts.Channel;
 import de.jojomodding.np.util.Pair;
 
 import java.util.HashMap;
@@ -24,6 +24,10 @@ public class Parser {
 
     public Parser(String s) {
         this.lexer = new Lexer(s);
+    }
+
+    public static Pair<Binding, CCSExpression> parse(String s) {
+        return new Parser(s).parseContextExpression();
     }
 
     public Pair<Binding, CCSExpression> parseContextExpression() {
@@ -77,9 +81,10 @@ public class Parser {
         if (t.getType() == Token.Type.RBRACE)
             return new FilterSet(isExclusive, Set.of());
 
-        loop: do {
+        loop:
+        do {
             if (t.getType() != Token.Type.IDENT)
-                throw new IllegalArgumentException("Expected IDENT, not " + t.getType()+"!");
+                throw new IllegalArgumentException("Expected IDENT, not " + t.getType() + "!");
             elems.add(Factory.of(t.getText()));
             t = lexer.nextToken();
             switch (t.getType()) {
@@ -123,7 +128,8 @@ public class Parser {
         Action a = parseAction();
         if (a == null) {
             return parseBase();
-        };
+        }
+        ;
         Token t = lexer.nextToken();
         if (t.getType() != Token.Type.DOT)
             throw new IllegalArgumentException("Expected DOT, not " + t.getType() + "!");
@@ -166,10 +172,6 @@ public class Parser {
                 return c;
         }
         throw new IllegalArgumentException("Expected IDENT, STOP or RPAREN, not " + k.getType() + "!");
-    }
-
-    public static Pair<Binding, CCSExpression> parse(String s) {
-        return new Parser(s).parseContextExpression();
     }
 
 }

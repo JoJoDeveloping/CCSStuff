@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 
-public class Choice extends CCSExpression{
+public class Choice extends CCSExpression {
 
     private final CCSExpression left, right;
 

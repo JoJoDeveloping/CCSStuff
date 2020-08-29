@@ -2,21 +2,22 @@ package de.jojomodding.np.ccs.expr;
 
 import de.jojomodding.np.util.Pair;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Binding {
 
     private final Function<String, Optional<CCSExpression>> base;
-    private final Set<String> domain;
+    private final List<String> domain;
 
     public Binding(Map<String, CCSExpression> map) {
         this.base = s -> Optional.ofNullable(map.get(s));
-        this.domain = map.keySet();
+        this.domain = new ArrayList<>(map.keySet());
     }
 
     public Binding(Function<String, Optional<CCSExpression>> f) {
@@ -24,8 +25,10 @@ public class Binding {
         this.domain = null;
     }
 
-    public Binding(Set<Pair<String, CCSExpression>> map) {
-        this(map.stream().collect(Collectors.toMap(Pair::first, Pair::second)));
+    public Binding(List<Pair<String, CCSExpression>> data) {
+        Map<String, CCSExpression> map = data.stream().collect(Collectors.toMap(p -> p.first(), p -> p.second()));
+        this.base = s -> Optional.of(map.get(s));
+        this.domain = data.stream().map(Pair::first).collect(Collectors.toList());
     }
 
     public Optional<CCSExpression> lookup(String var) {

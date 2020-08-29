@@ -1,13 +1,25 @@
 package de.jojomodding.np.lts;
 
-import de.jojomodding.np.ccs.expr.CCSExpression;
 import de.jojomodding.np.Factory;
+import de.jojomodding.np.ccs.expr.CCSExpression;
 
 import java.util.Objects;
 import java.util.Optional;
 
 
 public abstract class Action {
+
+    public static InternalAction tau() {
+        return InternalAction.theTau;
+    }
+
+    public static Action.SendingAction sending(Channel c) {
+        return new Action.SendingAction(c);
+    }
+
+    public static Action.ReceivingAction receiving(Channel c) {
+        return new Action.ReceivingAction(c);
+    }
 
     public boolean isInternal() {
         return false;
@@ -33,10 +45,20 @@ public abstract class Action {
 
     @Override
     public abstract String toString();
+
     @Override
     public abstract boolean equals(Object obj);
+
     @Override
     public abstract int hashCode();
+
+    public CCSExpression then(CCSExpression then) {
+        return Factory.prefix(this, then);
+    }
+
+    public CCSExpression then(String var) {
+        return Factory.prefix(this, var);
+    }
 
     public static class InternalAction extends Action {
 
@@ -100,7 +122,7 @@ public abstract class Action {
 
         @Override
         public int hashCode() {
-            return Objects.hash(chan);
+            return Objects.hash(chan, 1337);
         }
 
         @Override
@@ -120,7 +142,6 @@ public abstract class Action {
             return new ReceivingAction(chan);
         }
     }
-
 
     public static class ReceivingAction extends Action {
 
@@ -150,7 +171,7 @@ public abstract class Action {
 
         @Override
         public int hashCode() {
-            return Objects.hash(chan);
+            return Objects.hash(chan, 420);
         }
 
         @Override
@@ -169,25 +190,5 @@ public abstract class Action {
         public Action inverse() {
             return new SendingAction(chan);
         }
-    }
-
-    public static InternalAction tau() {
-        return InternalAction.theTau;
-    }
-
-    public static Action.SendingAction sending(Channel c) {
-        return new Action.SendingAction(c);
-    }
-
-    public static Action.ReceivingAction receiving(Channel c) {
-        return new Action.ReceivingAction(c);
-    }
-
-    public CCSExpression then(CCSExpression then) {
-        return Factory.prefix(this, then);
-    }
-
-    public CCSExpression then(String var) {
-        return Factory.prefix(this, var);
     }
 }

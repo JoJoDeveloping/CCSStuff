@@ -20,7 +20,8 @@ import java.util.stream.Collectors;
 
 public final class Factory {
 
-    private Factory() {}
+    private Factory() {
+    }
 
     public static Choice choice(String l, CCSExpression r) {
         return new Choice(var(l), r);

@@ -2,19 +2,8 @@ package de.jojomodding.np.ccs.parse;
 
 public class Token {
 
-    public static enum Type {
-        LPAREN, RPAREN,
-        LBRACE, RBRACE, COMMA,
-        IDENT, TAU, QUESTIONMARK, BANG,
-        PLUS, PIPE, BACKSLASH, DOT, STAR, STOP,
-        COLONEQ,
-
-        EOF
-    }
-
     private final Type type;
     private final String text;
-
     public Token(Type type) {
         this.type = type;
         this.text = null;
@@ -36,7 +25,17 @@ public class Token {
     @Override
     public String toString() {
         if (type == Type.IDENT)
-            return "IDENT("+text+")";
+            return "IDENT(" + text + ")";
         return type.toString();
+    }
+
+    public static enum Type {
+        LPAREN, RPAREN,
+        LBRACE, RBRACE, COMMA,
+        IDENT, TAU, QUESTIONMARK, BANG,
+        PLUS, PIPE, BACKSLASH, DOT, STAR, STOP,
+        COLONEQ,
+
+        EOF
     }
 }

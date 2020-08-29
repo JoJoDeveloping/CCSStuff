@@ -7,6 +7,12 @@ import java.util.Set;
 import java.util.function.Function;
 
 public class Stop extends CCSExpression {
+    private static final Stop theStop = new Stop();
+
+    public static Stop instance() {
+        return theStop;
+    }
+
     @Override
     public boolean equals(Object obj) {
         return obj instanceof Stop;
@@ -30,12 +36,6 @@ public class Stop extends CCSExpression {
     @Override
     public Set<Pair<Action, CCSExpression>> deriveTransitions(Function<String, Set<Pair<Action, CCSExpression>>> env) {
         return Set.of();
-    }
-
-    private static final Stop theStop = new Stop();
-
-    public static Stop instance() {
-        return theStop;
     }
 
 
