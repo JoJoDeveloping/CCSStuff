@@ -3,6 +3,7 @@ package de.jojomodding.np.lts;
 import de.jojomodding.np.Factory;
 import de.jojomodding.np.ccs.expr.Binding;
 import de.jojomodding.np.ccs.expr.CCSExpression;
+import de.jojomodding.np.util.Either;
 import de.jojomodding.np.util.Pair;
 
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ import static de.jojomodding.np.Factory.var;
 
 /**
  * A (finite) LTS
+ *
  * @param <T> the type of the states. Should have proper equality and toString()
  */
 public class LTS<T> {
@@ -98,12 +100,13 @@ public class LTS<T> {
 
     /**
      * Performs a random walk through this LTS
+     *
      * @param canTerminateEarly whether we can terminate before reaching a terminal state
-     * @return a string representation of the walk
+     * @return the walk
      */
-    public String randomWalk(boolean canTerminateEarly) {
+    public Walk<T> randomWalk(boolean canTerminateEarly) {
         T t = start;
-        String walk = t.toString();
+        Walk<T> walk = new Walk<>(t);
         Random r = new Random();
         while (true) {
             final T tl = t;
@@ -115,7 +118,7 @@ public class LTS<T> {
             if (i == choices.size())
                 return walk;
             Pair<Action, T> next = choices.get(i);
-            walk += " -" + next.first() + "-> " + next.second();
+            walk.addStep(next.first(), next.second());
             t = next.second();
         }
     }
@@ -171,5 +174,20 @@ public class LTS<T> {
         public String toString() {
             return start + " -" + action + "-> " + stop;
         }
+    }
+
+    public <U> LTS<Either<T, U>> mergeWith(LTS<U> ltsb) {
+        return new LTS<>(
+                Stream.concat(this.getStates().stream().map(Either::<T, U>left),
+                              ltsb.getStates().stream().map(Either::<T, U>right))
+                      .collect(Collectors.toUnmodifiableList()),
+                Stream.concat(this.getTransitions().stream()
+                                  .map(t -> new LTS.Transitions<>(Either.<T, U>left(t.getSource()), t.getAction(), Either.<T, U>left(t.getTarget()))),
+                              ltsb.getTransitions().stream()
+                               .map(t -> new LTS.Transitions<>(Either.<T, U>right(t.getSource()), t.getAction(), Either.<T, U>right(t.getTarget()))))
+                      .collect(Collectors.toUnmodifiableSet()),
+                Either.left(this.getStart())
+        );
+
     }
 }

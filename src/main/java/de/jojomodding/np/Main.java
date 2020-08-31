@@ -47,7 +47,7 @@ public class Main {
         LTS<CCSExpression> mlts = cd1.getReachableLTS(k.second());
         System.out.println(k);
         System.out.println(mlts);
-        LTS<Set<CCSExpression>> min = Minimization.minimizeWeakBisimilarity(mlts);
+        LTS<Set<CCSExpression>> min = Minimization.minimizeObservationCongruence(mlts);
         System.out.println(min);
         System.out.println(min.toPseuco());
         System.out.println(mlts.randomWalk(false));
@@ -69,9 +69,12 @@ public class Main {
         System.out.println(kk);
         CCSTransitionDerivation cr = new CCSTransitionDerivation(kk.first());
         LTS<CCSExpression> scientistLTS = cr.getReachableLTS(kk.second());
-        LTS<Set<CCSExpression>> miniScientist = Minimization.minimizeObservationCongruence(scientistLTS);
+        LTS<Set<CCSExpression>> miniScientist = Minimization.minimizeWeakBisimilarity(scientistLTS);
         System.out.println(miniScientist.rename());
         System.out.println(miniScientist.toPseuco());
+        System.out.println(Minimization.equalsUpToBisimilarity(scientistLTS, miniScientist));
+        System.out.println(Minimization.equalsUpToWeakBisimilarity(scientistLTS, miniScientist));
+        System.out.println(Minimization.equalsUpToObservationCongruence(scientistLTS, miniScientist));
 
     }
 

@@ -5,12 +5,16 @@ import de.jojomodding.np.ccs.expr.CCSExpression;
 import de.jojomodding.np.ccs.expr.Variable;
 import de.jojomodding.np.lts.Action;
 import de.jojomodding.np.lts.LTS;
+import de.jojomodding.np.lts.Walk;
 import de.jojomodding.np.util.Pair;
 import de.jojomodding.np.util.Utils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -98,5 +102,29 @@ public class CCSTransitionDerivation {
         return new LTS<>(deriveAllReachable(base), base);
     }
 
+    /**
+     * Performs a random walk starting at the given expression
+     * @param start where to start
+     * @param canTerminateEarly whether we can terminate before reaching a terminal state
+     * @return the walk
+     */
+    public Walk<CCSExpression> randomWalk(CCSExpression start, boolean canTerminateEarly) {
+        CCSExpression t = start;
+        Walk<CCSExpression> walk = new Walk<>(t);
+        Random r = new Random();
+        while (true) {
+            final CCSExpression tl = t;
+            List<Pair<Action, CCSExpression>> choices = new ArrayList<>(derive(t));
+            if (choices.isEmpty()) {
+                return walk;
+            }
+            int i = r.nextInt(choices.size() + (canTerminateEarly ? 1 : 0));
+            if (i == choices.size())
+                return walk;
+            Pair<Action, CCSExpression> next = choices.get(i);
+            walk.addStep(next.first(), next.second());
+            t = next.second();
+        }
+    }
 
 }
